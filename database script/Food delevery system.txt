@@ -240,3 +240,14 @@ CREATE TABLE Resturant (
     created_at DATETIME DEFAULT GETDATE(),
     updated_at DATETIME DEFAULT GETDATE()
 );
+
+CREATE TABLE DriverLocation (
+    id INT PRIMARY KEY IDENTITY(1,1),
+    driver_id INT,
+    order_id INT,
+    latitude DECIMAL(9, 6),
+    longitude DECIMAL(9, 6),
+    updated_at DATETIME DEFAULT GETDATE(),
+    FOREIGN KEY (driver_id) REFERENCES [User](id),
+    FOREIGN KEY (order_id) REFERENCES [Order](id) ON DELETE CASCADE
+);
