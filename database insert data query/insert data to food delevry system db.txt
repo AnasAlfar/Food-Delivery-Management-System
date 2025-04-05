@@ -1,0 +1,110 @@
+INSERT INTO Role (name_en, name_ar)
+VALUES 
+('Admin', N'مسؤول'),
+('Customer', N'عميل'),
+('Driver', N'سائق');
+
+INSERT INTO Permission (name_en, name_ar, description_en, description_ar)
+VALUES 
+('Manage_Users', N'إدارة المستخدمين', 'Ability to manage all users', N'القدرة على إدارة جميع المستخدمين'),
+('View_Orders', N'عرض الطلبات', 'Can view all orders', N'يمكنه عرض جميع الطلبات'),
+('Edit_Menu', N'تعديل القائمة', 'Can edit food items and categories', N'يمكنه تعديل الأصناف والفئات'),
+('Assign_Orders', N'تعيين الطلبات', 'Can assign orders to drivers', N'يمكنه تعيين الطلبات للسائقين');
+
+-- Admin gets all permissions
+INSERT INTO RolePermission (role_id, permission_id)
+SELECT 1, id FROM Permission;
+
+
+INSERT INTO [User] (role_id, first_name, last_name, username, email, phone_number, password, join_date, birthdate)
+VALUES 
+(1, 'Ali', 'Khatib', 'admin_ali', 'ali.admin@example.com', '+962790000001', 'hashedpassword1', GETDATE(), '1990-01-01'),
+(2, 'Sara', 'Yousef', 'sara_cust', 'sara.customer@example.com', '+962790000002', 'hashedpassword2', GETDATE(), '1995-03-22'),
+(3, 'Khaled', 'Naser', 'driver_khaled', 'khaled.driver@example.com', '+962790000003', 'hashedpassword3', GETDATE(), '1987-07-15');
+
+
+INSERT INTO Address (user_id, title, building_name, building_number, floor, apartment_number, additional_details, latitude, longitude, province, region)
+VALUES 
+(2, N'Home', N'Al-Salam Tower', '15A', '3', '12', N'Near the big mosque', 31.963158, 35.930359, 'Amman', 'Downtown'),
+(2, N'Work', N'Smart Office Center', '9', '7', '701', N'Next to City Mall', 31.9784, 35.9044, 'Amman', 'Al-Madina Al-Munawara St'),
+(3, N'Garage', N'Jordan Plaza', '27', '1', '5', N'Opposite to service station', 32.0167, 35.8667, 'Irbid', 'North Circle');
+
+
+
+INSERT INTO Category (name_en, name_ar, image) VALUES
+('Pizza', N'بيتزا', 'pizza.jpg'),
+('Burger', N'برغر', 'burger.jpg'),
+('Drinks', N'مشروبات', 'drinks.jpg');
+
+
+INSERT INTO Item (category_id, name_en, name_ar, description_en, description_ar, price, image) VALUES
+(1, 'Margherita', N'مارغريتا', 'Classic cheese pizza', N'بيتزا جبنة كلاسيكية', 5.00, 'margherita.jpg'),
+(2, 'Beef Burger', N'برغر لحم', 'Juicy grilled beef burger', N'برغر لحم مشوي', 4.50, 'beef_burger.jpg'),
+(3, 'Cola', N'كولا', 'Chilled soft drink', N'مشروب غازي بارد', 1.00, 'cola.jpg');
+
+
+INSERT INTO Offer (title_en, title_ar, description_en, description_ar, start_date, end_date, limit_amount, code, image, discount_percentage)
+VALUES 
+('Ramadan Special', N'عرض رمضان', 'Special offer for Ramadan season', N'عرض خاص بمناسبة شهر رمضان', '2025-04-01', '2025-04-30', 1000, 'RAMADAN25', 'offers/ramadan.png', 25.00),
+('New User Discount', N'خصم للمستخدمين الجدد', 'Get a discount on your first order!', N'احصل على خصم على أول طلب لك!', '2025-01-01', '2025-12-31', 500, 'NEW10', 'offers/new_user.png', 10.00);
+
+
+INSERT INTO OfferCategory (offer_id, category_id)
+VALUES 
+(1, 1),  -- Ramadan Special for Burgers
+(2, 2);  -- New User Discount for Pizza
+
+INSERT INTO OfferItem (offer_id, item_id)
+VALUES 
+(1, 1),  -- Ramadan Special for Cheeseburger
+(2, 2);  -- New User Discount for Pepperoni Pizza
+
+INSERT INTO [Order] (user_id, address_id, order_date, total_price, status, assigned_driver_id, rate)
+VALUES 
+(1, 1, GETDATE(), 15.50, 'Delivered', 2, 5),
+(2, 2, GETDATE(), 20.00, 'Pending', NULL, NULL);
+
+
+INSERT INTO OrderItem (order_id, item_id, quantity, item_price, options, notes)
+VALUES 
+(1, 1, 1, 5.50, N'Extra cheese', N'No onions'),
+(1, 2, 1, 10.00, N'Stuffed crust', N'Spicy'),
+(2, 2, 2, 10.00, N'Normal crust', N'No spice');
+
+INSERT INTO Notification (user_id, title, description, type)
+VALUES 
+(1, N'Order Update', 'Your order has been delivered.', 'Order'),
+(2, N'Welcome!', 'Thanks for joining our app!', 'System');
+
+INSERT INTO Favorite (user_id, item_id)
+VALUES 
+(1, 1),
+(2, 2);
+
+
+INSERT INTO Ticket (
+    client_id, title, description, type, status, response, action_type, refund_amount, refund_expiration_date, resolved_by_admin_id, resolved_at
+)
+VALUES 
+(1, N'Delivery Delay', N'My food arrived late.', 'Issue', 'Resolved', N'Sorry for the inconvenience, we will do better.', 'Close', NULL, NULL, 2, GETDATE()),
+(2, N'Wrong Order', N'I got the wrong pizza.', 'Issue', 'Resolved', N'We apologize. A refund has been issued.', 'Close and Refund', 10.00, '2025-04-15', 2, GETDATE());
+
+
+INSERT INTO Chat (order_id, sender_id, message)
+VALUES 
+(1, 1, N'Where is my order?'),
+(1, 2, N'On the way!');
+
+
+INSERT INTO PaymentMethod (name)
+VALUES 
+(N'Cash on Delivery'),
+(N'Credit Card'),
+(N'PayPal');
+
+INSERT INTO Payment (order_id, payment_method_id, amount, payment_status)
+VALUES 
+(1, 1, 15.50, 'Completed'),
+(2, 2, 20.00, 'Pending');
+
+

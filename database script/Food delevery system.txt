@@ -1,0 +1,242 @@
+CREATE DATABASE [Food Delivery Management System Db];
+
+CREATE TABLE Role (
+    id INT PRIMARY KEY IDENTITY(1,1),
+    name_en VARCHAR(255) UNIQUE,
+    name_ar NVARCHAR(255) UNIQUE,  
+    creation_date DATETIME DEFAULT GETDATE(),
+    is_active BIT DEFAULT 1
+);
+
+CREATE TABLE Permission (
+    id INT PRIMARY KEY IDENTITY(1,1),
+    name_en VARCHAR(255) UNIQUE NOT NULL,
+    name_ar NVARCHAR(255) UNIQUE NOT NULL,
+    description_en TEXT,
+    description_ar NVARCHAR(MAX),
+    created_at DATETIME DEFAULT GETDATE(),
+    updated_at DATETIME DEFAULT GETDATE()
+);
+
+CREATE TABLE RolePermission (
+    id INT PRIMARY KEY IDENTITY(1,1),
+    role_id INT NOT NULL,
+    permission_id INT NOT NULL,
+    created_at DATETIME DEFAULT GETDATE(),
+    FOREIGN KEY (role_id) REFERENCES Role(id) ON DELETE CASCADE,
+    FOREIGN KEY (permission_id) REFERENCES Permission(id) ON DELETE CASCADE,
+    UNIQUE (role_id, permission_id)  
+);
+
+CREATE TABLE [User] (
+    id INT PRIMARY KEY IDENTITY(1,1),
+    role_id INT,
+    first_name VARCHAR(255),
+    last_name VARCHAR(255),
+    username VARCHAR(255) UNIQUE,
+    email VARCHAR(255) UNIQUE,
+    phone_number VARCHAR(20),
+    password VARCHAR(255),
+    profile_image VARCHAR(255),
+    join_date DATETIME,
+    is_verified BIT DEFAULT 0,
+    is_active BIT DEFAULT 1,
+    created_at DATETIME DEFAULT GETDATE(),
+    updated_at DATETIME DEFAULT GETDATE(),
+    otp_code VARCHAR(255),  
+    otp_expiry DATETIME,     
+    birthdate DATE,
+    FOREIGN KEY (role_id) REFERENCES Role(id)
+);
+
+
+CREATE TABLE Address (
+    id INT PRIMARY KEY IDENTITY(1,1),
+    user_id INT,
+    title NVARCHAR(100),
+    building_name NVARCHAR(100),
+    building_number NVARCHAR(20),
+    floor VARCHAR(20),
+    apartment_number NVARCHAR(20),
+    additional_details VARCHAR(255),  
+    latitude DECIMAL(9, 6),
+    longitude DECIMAL(9, 6),
+    province VARCHAR(100),
+    region VARCHAR(100),
+    created_at DATETIME DEFAULT GETDATE(),
+    updated_at DATETIME DEFAULT GETDATE(),
+    FOREIGN KEY (user_id) REFERENCES [User](id)
+);
+
+CREATE TABLE Category (
+    id INT PRIMARY KEY IDENTITY(1,1),
+    name_en VARCHAR(255) UNIQUE,
+    name_ar NVARCHAR(255) UNIQUE,  
+    image VARCHAR(255),
+    is_active BIT DEFAULT 1,
+    created_at DATETIME DEFAULT GETDATE(),
+    updated_at DATETIME DEFAULT GETDATE()
+);
+
+CREATE TABLE Item (
+    id INT PRIMARY KEY IDENTITY(1,1),
+    category_id INT,
+    name_en VARCHAR(255),
+    name_ar NVARCHAR(255),  
+    description_en TEXT,
+    description_ar NVARCHAR(MAX),  
+    price DECIMAL(10, 2),
+    image VARCHAR(255),
+    is_active BIT DEFAULT 1,
+    created_at DATETIME DEFAULT GETDATE(),
+    updated_at DATETIME DEFAULT GETDATE(),
+    FOREIGN KEY (category_id) REFERENCES Category(id)
+);
+
+CREATE TABLE Offer (
+    id INT PRIMARY KEY IDENTITY(1,1),
+    title_en VARCHAR(255),
+    title_ar NVARCHAR(255),  
+    description_en TEXT,
+    description_ar NVARCHAR(MAX),  
+    start_date DATETIME,
+    end_date DATETIME,
+    limit_amount INT,
+    code VARCHAR(50),
+    image VARCHAR(255),
+    discount_percentage DECIMAL(5, 2),
+    created_at DATETIME DEFAULT GETDATE(),
+    updated_at DATETIME DEFAULT GETDATE()
+);
+
+CREATE TABLE OfferCategory (
+    id INT PRIMARY KEY IDENTITY(1,1),
+    offer_id INT,
+    category_id INT,
+    FOREIGN KEY (offer_id) REFERENCES Offer(id) ON DELETE CASCADE,
+    FOREIGN KEY (category_id) REFERENCES Category(id) ON DELETE CASCADE,
+    UNIQUE (offer_id, category_id) 
+);
+
+CREATE TABLE OfferItem (
+    id INT PRIMARY KEY IDENTITY(1,1),
+    offer_id INT,
+    item_id INT,
+    FOREIGN KEY (offer_id) REFERENCES Offer(id) ON DELETE CASCADE,
+    FOREIGN KEY (item_id) REFERENCES Item(id) ON DELETE CASCADE,
+    UNIQUE (offer_id, item_id) 
+);
+
+CREATE TABLE [Order] (
+    id INT PRIMARY KEY IDENTITY(1,1),
+    user_id INT,
+    address_id INT,
+    order_date DATETIME DEFAULT GETDATE(),
+    total_price DECIMAL(10, 2),
+    status VARCHAR(50),
+    assigned_driver_id INT,
+    rate INT,
+    created_at DATETIME DEFAULT GETDATE(),
+    updated_at DATETIME DEFAULT GETDATE(),
+    FOREIGN KEY (user_id) REFERENCES [User](id),
+    FOREIGN KEY (address_id) REFERENCES Address(id),
+    FOREIGN KEY (assigned_driver_id) REFERENCES [User](id)
+);
+
+CREATE TABLE OrderItem (
+    id INT PRIMARY KEY IDENTITY(1,1),
+    order_id INT,
+    item_id INT,
+    quantity INT NOT NULL CHECK (quantity > 0),
+    item_price DECIMAL(10, 2) NOT NULL,
+    options NVARCHAR(255),
+    notes NVARCHAR(255),
+    FOREIGN KEY (order_id) REFERENCES [Order](id) ON DELETE CASCADE,
+    FOREIGN KEY (item_id) REFERENCES Item(id)
+);
+
+CREATE TABLE Notification (
+    id INT PRIMARY KEY IDENTITY(1,1),
+    user_id INT,
+    title NVARCHAR(255),
+    description VARCHAR(MAX),  
+    type VARCHAR(50),
+    is_read BIT DEFAULT 0,
+    created_at DATETIME DEFAULT GETDATE(),
+    FOREIGN KEY (user_id) REFERENCES [User](id) ON DELETE CASCADE
+);
+
+CREATE TABLE Favorite (
+    id INT PRIMARY KEY IDENTITY(1,1),
+    user_id INT,
+    item_id INT,
+    created_at DATETIME DEFAULT GETDATE(),
+    FOREIGN KEY (user_id) REFERENCES [User](id) ON DELETE CASCADE,
+    FOREIGN KEY (item_id) REFERENCES Item(id) ON DELETE CASCADE,
+    UNIQUE (user_id, item_id) 
+);
+
+CREATE TABLE Ticket (
+    id INT PRIMARY KEY IDENTITY(1,1),
+    client_id INT,
+    title NVARCHAR(255),
+    description NVARCHAR(MAX),  -- Changed to NVARCHAR
+    creation_date DATETIME DEFAULT GETDATE(),
+    type VARCHAR(50) CHECK (type IN ('Issue', 'Suggestion')),
+    status VARCHAR(50),
+    response NVARCHAR(MAX),  -- Changed to NVARCHAR
+    action_type VARCHAR(50) CHECK (action_type IN ('Close', 'Close and Refund', 'Reject')),
+    refund_amount DECIMAL(10, 2),
+    refund_expiration_date DATE,
+    resolved_by_admin_id INT,
+    resolved_at DATETIME,
+    created_at DATETIME DEFAULT GETDATE(),
+    updated_at DATETIME DEFAULT GETDATE(),
+    FOREIGN KEY (client_id) REFERENCES [User](id),
+    FOREIGN KEY (resolved_by_admin_id) REFERENCES [User](id)
+);
+
+CREATE TABLE Chat (
+    id INT PRIMARY KEY IDENTITY(1,1),
+    order_id INT,
+    sender_id INT,
+    message NVARCHAR(MAX) NOT NULL,
+    timestamp DATETIME DEFAULT GETDATE(),
+    created_at DATETIME DEFAULT GETDATE(),
+    updated_at DATETIME DEFAULT GETDATE(),
+    FOREIGN KEY (order_id) REFERENCES [Order](id) ON DELETE CASCADE,
+    FOREIGN KEY (sender_id) REFERENCES [User](id)
+);
+
+CREATE TABLE PaymentMethod (
+    id INT PRIMARY KEY IDENTITY(1,1),
+    name NVARCHAR(50) UNIQUE,
+    is_active BIT DEFAULT 1,
+    created_at DATETIME DEFAULT GETDATE(),
+    updated_at DATETIME DEFAULT GETDATE()
+);
+
+CREATE TABLE Payment (
+    id INT PRIMARY KEY IDENTITY(1,1),
+    order_id INT UNIQUE, 
+    payment_method_id INT NOT NULL,
+    payment_date DATETIME DEFAULT GETDATE(),
+    amount DECIMAL(10, 2) NOT NULL,
+    payment_status VARCHAR(50), 
+    created_at DATETIME DEFAULT GETDATE(),
+    updated_at DATETIME DEFAULT GETDATE(),
+    FOREIGN KEY (order_id) REFERENCES [Order](id) ON DELETE CASCADE,
+    FOREIGN KEY (payment_method_id) REFERENCES PaymentMethod(id)
+);
+
+
+CREATE TABLE Resturant (
+    id INT PRIMARY KEY IDENTITY(1,1),
+    NameAr NVARCHAR(MAX),
+    NAmeEn VARCHAR(MAX),
+    ImageURL VARCHAR(MAX),
+    latitude DECIMAL(9, 6),
+    longitude DECIMAL(9, 6),
+    created_at DATETIME DEFAULT GETDATE(),
+    updated_at DATETIME DEFAULT GETDATE()
+);
